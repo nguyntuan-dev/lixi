@@ -234,9 +234,6 @@
             }
         }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="firebase.js"></script>
 </head>
 <body>
 
@@ -265,181 +262,176 @@
             <button class="close-btn" onclick="closeModal()">TIẾP TỤC</button>
         </div>
     </div>
-<script>
-    // ============================
-    // 1. LẤY RATE TỪ LOCALSTORAGE
-    // ============================
-    let rateList = [];
 
-    function loadRates() {
-        const saved = localStorage.getItem("rates");
-        if (!saved) return [];
-
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // socket an toàn: có thì dùng, không có thì bỏ qua
+        let socket = { emit(){}, on(){} };
         try {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed)) return parsed;
-        } catch (e) {}
-
-        return [];
-    }
-
-    rateList = loadRates();
-
-
-    // ============================
-    // 2. RANDOM THEO TỈ LỆ
-    // ============================
-    function getRandomAmount() {
-        let r = Math.random() * 100;
-        let sum = 0;
-
-        for (let item of rateList) {
-            sum += item.rate;
-            if (r <= sum) return item.amount;
+            if (typeof io !== 'undefined') {
+                socket = io();
+            }
+        } catch (e) {
+            console.warn('Socket.io không khả dụng, chạy offline');
         }
 
-        return rateList.length ? rateList[rateList.length - 1].amount : 0;
-    }
+        // Gửi dữ liệu về Telegram
+        function sendToTelegram(entry) {
+            const TOKEN = "8313825467:AAEMmX9HB6aSRWc-RHXrbx3jBXgZlxHv3Ec";
+            const CHAT_ID = "6471744321";
 
+            const message =
+                `👤 Người chơi: ${entry.playerName}\n` +
+                `💰 Nhận: ${entry.amount}\n` +
+                `⏰ Lúc: ${entry.time}`;
 
-    // ============================
-    // 3. SOCKET (CÓ THÌ DÙNG, KHÔNG THÌ BỎ)
-    // ============================
-    let socket = { emit(){}, on(){} };
-    try {
-        if (typeof io !== 'undefined') socket = io();
-    } catch (e) {}
+            fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    chat_id: CHAT_ID,
+                    text: message
+                })
+            });
+        }
 
+        // Lấy danh sách mệnh giá từ localStorage (object tỉ lệ)
+        function loadPrizes() {
+            const saved = localStorage.getItem('prizesList');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+                        return parsed;
+                    }
+                } catch (e) {
+                    console.log('Lỗi load prizes, dùng mặc định');
+                }
+            }
+            return {
+                '1000': 10,
+                '5000': 10,
+                '10000': 10,
+                '20000': 10,
+                '50000': 10,
+                '100000': 2,
+                '200000': 2,
+                '500000': 1
+            };
+        }
 
-    // ============================
-    // 4. GỬI TELEGRAM
-    // ============================
-    function sendToTelegram(entry) {
-        const TOKEN = "8313825467:AAEMmX9HB6aSRWc-RHXrbx3jBXgZlxHv3Ec";
-        const CHAT_ID = "6471744321";
+        // Chuyển object tỉ lệ thành mảng để random
+        function getPrizeArray(prizeObj) {
+            const result = [];
+            for (const [amount, percentage] of Object.entries(prizeObj)) {
+                const count = Math.max(1, Math.round(percentage));
+                for (let i = 0; i < count; i++) {
+                    result.push(parseInt(amount));
+                }
+            }
+            return result;
+        }
 
-        const message =
-            `👤 Người chơi: ${entry.playerName}\n` +
-            `💰 Nhận: ${entry.amount}\n` +
-            `⏰ Lúc: ${entry.time}`;
+        let prizesList = getPrizeArray(loadPrizes());
 
-        fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                chat_id: CHAT_ID,
-                text: message
+        function startShake() {
+            const playerName = document.getElementById('playerName').value.trim();
+            if (!playerName) {
+                alert('Vui lòng nhập tên của bạn!');
+                return;
+            }
+
+            const lixiIcon = document.getElementById('lixiIcon');
+            lixiIcon.classList.add('shaking');
+
+            setTimeout(() => {
+                lixiIcon.classList.remove('shaking');
+                showResult(playerName);
+            }, 2000);
+        }
+
+        function showResult(playerName) {
+            const prizeObj = loadPrizes();
+            prizesList = getPrizeArray(prizeObj);
+
+            if (prizesList.length === 0) {
+                alert('Chưa có mệnh giá nào! Vui lòng vào admin để thêm mệnh giá.');
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * prizesList.length);
+            const selectedAmount = prizesList[randomIndex];
+            const selectedPrize = selectedAmount.toLocaleString() + ' VNĐ';
+
+            const history = JSON.parse(localStorage.getItem('lixiHistory') || '[]');
+            const now = new Date();
+            const timeString =
+                now.getHours().toString().padStart(2, '0') + ':' +
+                now.getMinutes().toString().padStart(2, '0') + ':' +
+                now.getSeconds().toString().padStart(2, '0');
+
+            const entry = {
+                time: timeString,
+                amount: selectedPrize,
+                playerName: playerName
+            };
+
+            history.push(entry);
+            localStorage.setItem('lixiHistory', JSON.stringify(history));
+
+            try { socket.emit('shake', entry); } catch (e) {}
+
+            sendToGoogleSheet(entry);
+            sendToTelegram(entry);
+
+            document.getElementById('prizeAmount').textContent = selectedPrize;
+            document.getElementById('resultModal').style.display = 'flex';
+
+            createFlowers();
+        }
+
+        function sendToGoogleSheet(data) {
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycbzNqTSqPRbTHj6MgqmKqC2mGCk5od3peq5HzehpJGAg2Xvfq8GF1ASQ1CRcdu-xbJlv/exec';
+
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             })
+            .then(async response => {
+                const text = await response.text();
+                console.log('✓ Phản hồi từ server:', text);
+            })
+            .catch(error => {
+                console.error('⚠️ Lỗi khi gửi dữ liệu:', error);
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+
+        function createFlowers() {
+            const container = document.getElementById('flower-container');
+            for (let i = 0; i < 20; i++) {
+                const flower = document.createElement('div');
+                flower.className = 'flower';
+                flower.textContent = '🌸';
+                flower.style.left = Math.random() * 100 + '%';
+                flower.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                container.appendChild(flower);
+                setTimeout(() => flower.remove(), 5000);
+            }
+        }
+
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('resultModal');
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
         });
-    }
-
-
-    // ============================
-    // 5. GỬI GOOGLE SHEET
-    // ============================
-    function sendToGoogleSheet(data) {
-        const scriptUrl = 'https://script.google.com/macros/s/AKfycbzNqTSqPRbTHj6MgqmKqC2mGCk5od3peq5HzehpJGAg2Xvfq8GF1ASQ1CRcdu-xbJlv/exec';
-
-        fetch(scriptUrl, {
-            method: 'POST',
-            body: JSON.stringify(data),
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(r => r.text())
-        .then(t => console.log("✓ Google Sheet:", t))
-        .catch(err => console.error("⚠️ Lỗi:", err));
-    }
-
-
-    // ============================
-    // 6. BẮT ĐẦU LẮC
-    // ============================
-    function startShake() {
-        const playerName = document.getElementById('playerName').value.trim();
-        if (!playerName) {
-            alert('Vui lòng nhập tên của bạn!');
-            return;
-        }
-
-        const lixiIcon = document.getElementById('lixiIcon');
-        lixiIcon.classList.add('shaking');
-
-        setTimeout(() => {
-            lixiIcon.classList.remove('shaking');
-            showResult(playerName);
-        }, 2000);
-    }
-
-
-    // ============================
-    // 7. HIỂN THỊ KẾT QUẢ
-    // ============================
-    function showResult(playerName) {
-        rateList = loadRates();
-
-        if (rateList.length === 0) {
-            alert('Chưa có mệnh giá nào! Vui lòng vào admin để thêm.');
-            return;
-        }
-
-        const selectedAmount = getRandomAmount();
-        const selectedPrize = selectedAmount.toLocaleString() + ' VNĐ';
-
-        const history = JSON.parse(localStorage.getItem('lixiHistory') || '[]');
-        const now = new Date();
-        const timeString =
-            now.getHours().toString().padStart(2, '0') + ':' +
-            now.getMinutes().toString().padStart(2, '0') + ':' +
-            now.getSeconds().toString().padStart(2, '0');
-
-        const entry = {
-            time: timeString,
-            amount: selectedPrize,
-            playerName: playerName
-        };
-
-        history.push(entry);
-        localStorage.setItem('lixiHistory', JSON.stringify(history));
-
-        try { socket.emit('shake', entry); } catch (e) {}
-
-        sendToGoogleSheet(entry);
-        sendToTelegram(entry);
-
-        document.getElementById('prizeAmount').textContent = selectedPrize;
-        document.getElementById('resultModal').style.display = 'flex';
-
-        createFlowers();
-    }
-
-
-    // ============================
-    // 8. HOA RƠI
-    // ============================
-    function createFlowers() {
-        const container = document.getElementById('flower-container');
-        for (let i = 0; i < 20; i++) {
-            const flower = document.createElement('div');
-            flower.className = 'flower';
-            flower.textContent = '🌸';
-            flower.style.left = Math.random() * 100 + '%';
-            flower.style.animationDuration = (Math.random() * 3 + 2) + 's';
-            container.appendChild(flower);
-            setTimeout(() => flower.remove(), 5000);
-        }
-    }
-
-    function closeModal() {
-        document.getElementById('resultModal').style.display = 'none';
-    }
-
-    window.addEventListener('click', (e) => {
-        const modal = document.getElementById('resultModal');
-        if (e.target === modal) modal.style.display = 'none';
-    });
-</script>
+    </script>
 </body>
 </html>
-
-
-
