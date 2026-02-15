@@ -234,6 +234,9 @@
             }
         }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="firebase.js"></script>
 </head>
 <body>
 
@@ -265,6 +268,22 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        let rateList = [];
+
+firebase.database().ref("rates").on("value", snapshot => {
+    rateList = snapshot.val() || [];
+});
+        function getRandomAmount() {
+    let r = Math.random() * 100;
+    let sum = 0;
+
+    for (let item of rateList) {
+        sum += item.rate;
+        if (r <= sum) return item.amount;
+    }
+
+    return rateList.length ? rateList[rateList.length - 1].amount : 0;
+}
         // socket an toàn: có thì dùng, không có thì bỏ qua
         let socket = { emit(){}, on(){} };
         try {
@@ -359,9 +378,8 @@
                 return;
             }
 
-            const randomIndex = Math.floor(Math.random() * prizesList.length);
-            const selectedAmount = prizesList[randomIndex];
-            const selectedPrize = selectedAmount.toLocaleString() + ' VNĐ';
+           const selectedAmount = getRandomAmount();
+const selectedPrize = selectedAmount.toLocaleString() + ' VNĐ';
 
             const history = JSON.parse(localStorage.getItem('lixiHistory') || '[]');
             const now = new Date();
@@ -435,4 +453,5 @@
     </script>
 </body>
 </html>
+
 
