@@ -100,6 +100,7 @@
     </style>
 </head>
 <body>
+    <body onload="checkPassword()">
     <div class="admin-container">
         <h1>📊 QUẢN LÝ LÌ XÌ</h1>
         
@@ -185,6 +186,33 @@
     </div>
 
     <script>
+        function saveToFirebase() {
+    const rows = document.querySelectorAll("#rateTable tbody tr");
+    const data = [];
+
+    rows.forEach(row => {
+        const amount = parseInt(row.querySelector(".amount").innerText.replace(/\D/g, ""));
+        const rate = parseFloat(row.querySelector(".rate").innerText);
+        data.push({ amount, rate });
+    });
+
+    firebase.database().ref("rates").set(data)
+        .then(() => {
+            alert("Đã lưu thành công cho TẤT CẢ thiết bị!");
+        })
+        .catch(err => {
+            alert("Lỗi khi lưu: " + err);
+        });
+}
+        const ADMIN_PASS = "tuan2006";
+
+function checkPassword() {
+    const pass = prompt("Nhập mật khẩu admin:");
+    if (pass !== ADMIN_PASS) {
+        alert("Sai mật khẩu!");
+        window.location.href = "lixi.html";
+    }
+}
         function loadPrizes() {
             const saved = localStorage.getItem('prizesList');
             if (saved) {
@@ -454,3 +482,4 @@
     </script>
 </body>
 </html>
+
