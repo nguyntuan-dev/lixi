@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Quản Lý Lì Xì</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial', sans-serif; background: #f5f5f5; padding: 20px; }
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 3px solid #FFD700;
+            padding-bottom: 15px;
+        }
+        .sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #FFD700;
+        }
+        .section h2 { color: #333; margin-bottom: 15px; font-size: 1.3em; }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stat-label { font-size: 0.9em; color: #666; margin-bottom: 5px; }
+        .stat-value { font-size: 1.8em; font-weight: bold; color: #e74c3c; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #333; font-weight: bold; }
+        input, select {
+            width: 100%; padding: 10px; border: 1px solid #ddd;
+            border-radius: 5px; font-size: 1em;
+        }
+        input:focus, select:focus {
+            outline: none; border-color: #FFD700;
+            box-shadow: 0 0 5px rgba(255,215,0,0.3);
+        }
+        button {
+            background: #FFD700; color: #333; border: none;
+            padding: 10px 20px; border-radius: 5px; cursor: pointer;
+            font-weight: bold; transition: all 0.3s;
+            margin-right: 10px; margin-bottom: 10px;
+        }
+        button:hover {
+            background: #FFA500; transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        button.danger { background: #e74c3c; color: white; }
+        button.danger:hover { background: #c0392b; }
+        button.success { background: #27ae60; color: white; }
+        button.success:hover { background: #229954; }
+        table {
+            width: 100%; border-collapse: collapse; margin-top: 15px;
+        }
+        table th {
+            background: #333; color: #FFD700; padding: 12px; text-align: left;
+        }
+        table td { padding: 12px; border-bottom: 1px solid #ddd; }
+        table tr:hover { background: #f9f9f9; }
+        table tr:last-child td { border-bottom: none; }
+        .delete-btn {
+            background: #e74c3c; color: white; padding: 5px 10px;
+            border: none; border-radius: 3px; cursor: pointer; font-size: 0.9em;
+        }
+        .delete-btn:hover { background: #c0392b; }
+        .history-section { grid-column: 1 / -1; }
+        .empty-message {
+            text-align: center; color: #999; padding: 20px; font-style: italic;
+        }
+        .btn-group { display: flex; gap: 10px; }
+        @media (max-width: 768px) {
+            .sections { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <h1>📊 QUẢN LÝ LÌ XÌ</h1>
+        
+        <div class="sections">
+            <div class="section">
+                <h2>📈 Thống Kê</h2>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Tổng Lần Lắc</div>
+                        <div class="stat-value" id="totalShakes">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Tổng Tiền Phát</div>
+                        <div class="stat-value" id="totalAmount">0 VNĐ</div>
+                    </div>
+                </div>
+                <button class="danger" onclick="resetAllData()">🗑️ Xóa Tất Cả Dữ Liệu</button>
+            </div>
+            
+            <div class="section">
+                <h2>💰 Thêm Mệnh Giá Mới</h2>
+                <div class="form-group">
+                    <label>Mệnh giá (VNĐ):</label>
+                    <input type="number" id="newAmount" placeholder="Nhập số tiền" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Tỉ Lệ (%):</label>
+                    <input type="number" id="newPercentage" placeholder="Nhập tỉ lệ %" min="0" max="100" value="10">
+                </div>
+                <button class="success" onclick="addPrize()">➕ Thêm Mệnh Giá</button>
+                <button class="danger" onclick="clearAllPrizes()" style="margin-left: 10px;">🗑️ Xóa Tất Cả</button>
+            </div>
+            
+            <div class="section">
+                <h2>💎 Danh Sách Mệnh Giá & Tỉ Lệ</h2>
+                <table id="prizeTable">
+                    <thead>
+                        <tr>
+                            <th>Mệnh Giá</th>
+                            <th>Tỉ Lệ (%)</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prizeTableBody">
+                        <tr><td colspan="3" class="empty-message">Chưa có mệnh giá nào</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section history-section">
+                <h2>📝 Lịch Sử Lắc Lì Xì</h2>
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Tên Người Lắc</th>
+                            <th>Thời Gian</th>
+                            <th>Mệnh Giá</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr><td colspan="4" class="empty-message">Chưa có lịch sử</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section history-section">
+                <h2>👥 Thống Kê Người Chơi</h2>
+                <table id="playerStatsTable">
+                    <thead>
+                        <tr>
+                            <th>Tên Người Chơi</th>
+                            <th>Số Lần Lắc</th>
+                            <th>Tổng Tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playerStatsBody">
+                        <tr><td colspan="3" class="empty-message">Chưa có dữ liệu</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadPrizes() {
+            const saved = localStorage.getItem('prizesList');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+                        return parsed;
+                    }
+                } catch (e) {
+                    console.log('Sử dụng mệnh giá mặc định');
+                }
+            }
+            return {
+                '1000': 10,
+                '5000': 10,
+                '10000': 10,
+                '20000': 10,
+                '50000': 10,
+                '100000': 2,
+                '200000': 2,
+                '500000': 1
+            };
+        }
+
+        function loadHistory() {
+            const saved = localStorage.getItem('lixiHistory');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function saveHistory(history) {
+            localStorage.setItem('lixiHistory', JSON.stringify(history));
+        }
+
+        function updateStats() {
+            const history = loadHistory();
+            const totalShakes = history.length;
+            let totalAmount = 0;
+            history.forEach(entry => {
+                const amount = parseInt(entry.amount.replace(/\D/g, '')) || 0;
+                totalAmount += amount;
+            });
+            document.getElementById('totalShakes').textContent = totalShakes;
+            document.getElementById('totalAmount').textContent =
+                totalAmount.toLocaleString() + ' VNĐ';
+        }
+
+        function displayPrizes() {
+            const prizes = loadPrizes();
+            const tbody = document.getElementById('prizeTableBody');
+            tbody.innerHTML = '';
+
+            if (Object.keys(prizes).length === 0) {
+                tbody.innerHTML =
+                    '<tr><td colspan="3" class="empty-message">Chưa có mệnh giá nào</td></tr>';
+                return;
+            }
+
+            const sortedPrizes = Object.entries(prizes)
+                .sort((a, b) => parseInt(b[0]) - parseInt(a[0]));
+
+            sortedPrizes.forEach(([amount, percentage]) => {
+                const formattedAmount = parseInt(amount).toLocaleString();
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${formattedAmount} VNĐ</td>
+                        <td>
+                            <input type="number" min="0" max="100" value="${percentage}"
+                                   onchange="updatePrizePercentage('${amount}', this.value)"
+                                   style="width: 80px; padding: 5px; border: 1px solid #ddd; border-radius: 3px;">%
+                        </td>
+                        <td><button class="delete-btn" onclick="removePrize('${amount}')">Xóa</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function displayHistory() {
+            const history = loadHistory();
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+
+            if (history.length === 0) {
+                tbody.innerHTML =
+                    '<tr><td colspan="4" class="empty-message">Chưa có lịch sử</td></tr>';
+                return;
+            }
+
+            history.slice().reverse().forEach((entry, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${entry.playerName || 'Ẩn danh'}</strong></td>
+                        <td>${entry.time}</td>
+                        <td>${entry.amount}</td>
+                        <td>
+                            <button class="delete-btn"
+                                onclick="deleteHistoryEntry(${history.length - 1 - index})">
+                                Xóa
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function displayPlayerStats() {
+            const history = loadHistory();
+            const playerStats = {};
+
+            history.forEach(entry => {
+                const name = entry.playerName || 'Ẩn danh';
+                const amount = parseInt(entry.amount.replace(/\D/g, '')) || 0;
+
+                if (!playerStats[name]) {
+                    playerStats[name] = { count: 0, total: 0 };
+                }
+                playerStats[name].count += 1;
+                playerStats[name].total += amount;
+            });
+
+            const tbody = document.getElementById('playerStatsBody');
+            tbody.innerHTML = '';
+
+            if (Object.keys(playerStats).length === 0) {
+                tbody.innerHTML =
+                    '<tr><td colspan="3" class="empty-message">Chưa có dữ liệu</td></tr>';
+                return;
+            }
+
+            const sortedPlayers = Object.entries(playerStats)
+                .sort((a, b) => b[1].total - a[1].total);
+
+            sortedPlayers.forEach(([name, stats]) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${name}</strong></td>
+                        <td style="text-align: center;">${stats.count} lần</td>
+                        <td style="text-align: right; color: #27ae60; font-weight: bold;">
+                            ${stats.total.toLocaleString()} VNĐ
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function addPrize() {
+            const amount = parseInt(document.getElementById('newAmount').value);
+            const percentage = parseInt(document.getElementById('newPercentage').value);
+
+            if (!amount || amount <= 0) {
+                alert('Vui lòng nhập mệnh giá hợp lệ!');
+                return;
+            }
+            if (!percentage || percentage <= 0) {
+                alert('Vui lòng nhập tỉ lệ hợp lệ!');
+                return;
+            }
+
+            const prizes = loadPrizes();
+            prizes[amount.toString()] = percentage;
+
+            localStorage.setItem('prizesList', JSON.stringify(prizes));
+            document.getElementById('newAmount').value = '';
+            document.getElementById('newPercentage').value = '10';
+
+            displayPrizes();
+            try { socket.emit('update-prizes', prizes); } catch (e) {}
+            alert('Đã thêm mệnh giá ' + amount.toLocaleString() + ' VNĐ với tỉ lệ ' + percentage + '%');
+        }
+
+        function updatePrizePercentage(amount, percentage) {
+            const prizes = loadPrizes();
+            const pct = parseInt(percentage);
+
+            if (pct < 0) {
+                alert('Tỉ lệ không được âm!');
+                displayPrizes();
+                return;
+            }
+
+            prizes[amount] = pct;
+            localStorage.setItem('prizesList', JSON.stringify(prizes));
+            try { socket.emit('update-prizes', prizes); } catch (e) {}
+            alert('Đã cập nhật tỉ lệ thành ' + pct + '%');
+            displayPrizes();
+        }
+
+        function removePrize(amount) {
+            if (!confirm('Bạn có chắc muốn xóa mệnh giá này?')) return;
+
+            const prizes = loadPrizes();
+            delete prizes[amount];
+            localStorage.setItem('prizesList', JSON.stringify(prizes));
+            displayPrizes();
+            try { socket.emit('update-prizes', prizes); } catch (e) {}
+        }
+
+        function clearAllPrizes() {
+            if (!confirm('⚠️ BẠN CÓ CHẮC MUỐN XÓA TẤT CẢ MỆNH GIÁ?')) return;
+            if (!confirm('Xác nhận lần nữa - sẽ xóa tất cả!')) return;
+
+            localStorage.setItem('prizesList', JSON.stringify({}));
+            displayPrizes();
+            try { socket.emit('update-prizes', {}); } catch (e) {}
+            alert('✓ Đã xóa tất cả mệnh giá. Bạn có thể nhập lại!');
+        }
+
+        function deleteHistoryEntry(index) {
+            if (!confirm('Bạn có chắc muốn xóa entry này?')) return;
+
+            const history = loadHistory();
+            history.splice(index, 1);
+            saveHistory(history);
+            updateStats();
+            displayHistory();
+        }
+
+        function resetAllData() {
+            if (!confirm('⚠️ BẠN CÓ CHẮC MUỐN XÓA TẤT CẢ DỮ LIỆU? Hành động này KHÔNG THỂ HOÀN TÁC!')) return;
+            if (!confirm('CẢNH BÁO: Bạn sắp xóa tất cả lịch sử lắc. Tiếp tục không?')) return;
+
+            localStorage.removeItem('lixiHistory');
+            updateStats();
+            displayHistory();
+            displayPlayerStats();
+            alert('✓ Đã xóa tất cả dữ liệu lịch sử');
+        }
+
+        function init() {
+            displayPrizes();
+            displayHistory();
+            displayPlayerStats();
+            updateStats();
+        }
+
+        init();
+
+        setInterval(() => {
+            updateStats();
+            displayPlayerStats();
+            displayHistory();
+        }, 2000);
+    </script>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = { emit(){}, on(){} };
+
+        try {
+            if (typeof io !== 'undefined') {
+                socket = io();
+                socket.emit('register-admin');
+            }
+        } catch (e) {
+            console.warn('Socket.io không khả dụng, admin chạy offline');
+        }
+
+        socket.on('new-shake', entry => {
+            try {
+                const history = loadHistory();
+                history.push(entry);
+                saveHistory(history);
+            } catch (e) {}
+            updateStats();
+            displayHistory();
+            displayPlayerStats();
+        });
+    </script>
+</body>
+</html>

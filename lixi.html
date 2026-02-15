@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lắc Lì Xì Online - Năm Mới Phát Tài</title>
+    <style>
+        /* CẤU HÌNH GIAO DIỆN */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #8E0E00, #1F1C18);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #fff;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            width: 95%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #FFD700;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px #000;
+            font-size: 1.8em;
+        }
+        p {
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+        #playerName {
+            padding: 12px !important;
+            border: 2px solid #FFD700 !important;
+            border-radius: 8px !important;
+            width: 90% !important;
+            color: #fff !important;
+            background: rgba(255,255,255,0.2) !important;
+            font-size: 1em !important;
+            margin-bottom: 15px !important;
+            font-weight: bold !important;
+        }
+        #playerName::placeholder {
+            color: rgba(255,255,255,0.7) !important;
+        }
+        .lixi-bag {
+            font-size: 120px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s;
+            display: inline-block;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+            margin: 20px 0;
+        }
+        .shaking {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both infinite;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0) rotate(-5deg); }
+            20%, 80% { transform: translate3d(2px, 0, 0) rotate(5deg); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0) rotate(-10deg); }
+            40%, 60% { transform: translate3d(4px, 0, 0) rotate(10deg); }
+        }
+        .btn-shake {
+            background: linear-gradient(to bottom, #FFD700, #FFA500);
+            border: none;
+            padding: 16px 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #8E0E00;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+            transition: transform 0.1s;
+            width: 100%;
+            max-width: 280px;
+            touch-action: manipulation;
+        }
+        .btn-shake:active {
+            transform: scale(0.95);
+        }
+        .result-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .result-content {
+            background: #fff;
+            color: #d63031;
+            padding: 30px 20px;
+            border-radius: 15px;
+            text-align: center;
+            width: 100%;
+            max-width: 320px;
+            animation: popIn 0.3s ease-out;
+            border: 5px solid #FFD700;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .result-content h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        .prize-text {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 25px 0;
+            color: #e74c3c;
+        }
+        .close-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            width: 100%;
+            max-width: 200px;
+            touch-action: manipulation;
+        }
+        .flower {
+            position: fixed;
+            top: -10%;
+            color: #FFD700;
+            font-size: 20px;
+            animation: fall linear forwards;
+            z-index: -1;
+        }
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+                border-radius: 15px;
+                margin: auto;
+            }
+            h1 {
+                font-size: 1.6em;
+                margin-bottom: 8px;
+            }
+            p {
+                font-size: 0.95em;
+                margin-bottom: 15px;
+            }
+            .lixi-bag {
+                font-size: 100px;
+                margin: 15px 0;
+            }
+            .btn-shake {
+                padding: 14px 40px;
+                font-size: 1em;
+                margin-top: 15px;
+            }
+            .result-modal {
+                padding: 10px;
+            }
+            .result-content {
+                padding: 25px 15px;
+                max-width: 90%;
+            }
+            .result-content h3 {
+                font-size: 1.3em;
+            }
+            .prize-text {
+                font-size: 2em;
+                margin: 20px 0;
+            }
+            .close-btn {
+                padding: 10px 25px;
+                font-size: 0.95em;
+            }
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.4em;
+            }
+            p {
+                font-size: 0.9em;
+            }
+            .lixi-bag {
+                font-size: 80px;
+                margin: 10px 0;
+            }
+            .btn-shake {
+                padding: 12px 35px;
+                font-size: 0.95em;
+                margin-top: 12px;
+            }
+            .result-content {
+                padding: 20px 15px;
+            }
+            .result-content h3 {
+                font-size: 1.2em;
+            }
+            .prize-text {
+                font-size: 1.8em;
+                margin: 15px 0;
+            }
+            #playerName {
+                font-size: 0.95em !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="flower-container"></div>
+
+    <div class="container">
+        <h1>Vạn Sự Như Ý</h1>
+        <p>Bấm nút bên dưới để nhận lộc đầu năm!</p>
+        
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="playerName" placeholder="Nhập tên của bạn..." style="padding: 10px; border: 2px solid #FFD700; border-radius: 5px; width: 90%; color: #fff; background: rgba(255,255,255,0.2); font-size: 1em;">
+        </div>
+        
+        <div class="lixi-bag" id="lixiIcon">
+            🧧
+        </div>
+
+        <br>
+        <button class="btn-shake" onclick="startShake()">LẮC NGAY</button>
+    </div>
+
+    <div class="result-modal" id="resultModal">
+        <div class="result-content">
+            <h3>🎉 CHÚC MỪNG BẠN 🎉</h3>
+            <p class="prize-text" id="prizeAmount"></p>
+            <button class="close-btn" onclick="closeModal()">TIẾP TỤC</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // socket an toàn: có thì dùng, không có thì bỏ qua
+        let socket = { emit(){}, on(){} };
+        try {
+            if (typeof io !== 'undefined') {
+                socket = io();
+            }
+        } catch (e) {
+            console.warn('Socket.io không khả dụng, chạy offline');
+        }
+
+        // Gửi dữ liệu về Telegram
+        function sendToTelegram(entry) {
+            const TOKEN = "8415765220:AAE3OxH1WziZ6vvy4amuv38x7IdKwJf8HLw";
+            const CHAT_ID = "605273323";
+
+            const message =
+                `👤 Người chơi: ${entry.playerName}\n` +
+                `💰 Nhận: ${entry.amount}\n` +
+                `⏰ Lúc: ${entry.time}`;
+
+            fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    chat_id: CHAT_ID,
+                    text: message
+                })
+            });
+        }
+
+        // Lấy danh sách mệnh giá từ localStorage (object tỉ lệ)
+        function loadPrizes() {
+            const saved = localStorage.getItem('prizesList');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+                        return parsed;
+                    }
+                } catch (e) {
+                    console.log('Lỗi load prizes, dùng mặc định');
+                }
+            }
+            return {
+                '1000': 10,
+                '5000': 10,
+                '10000': 10,
+                '20000': 10,
+                '50000': 10,
+                '100000': 2,
+                '200000': 2,
+                '500000': 1
+            };
+        }
+
+        // Chuyển object tỉ lệ thành mảng để random
+        function getPrizeArray(prizeObj) {
+            const result = [];
+            for (const [amount, percentage] of Object.entries(prizeObj)) {
+                const count = Math.max(1, Math.round(percentage));
+                for (let i = 0; i < count; i++) {
+                    result.push(parseInt(amount));
+                }
+            }
+            return result;
+        }
+
+        let prizesList = getPrizeArray(loadPrizes());
+
+        function startShake() {
+            const playerName = document.getElementById('playerName').value.trim();
+            if (!playerName) {
+                alert('Vui lòng nhập tên của bạn!');
+                return;
+            }
+
+            const lixiIcon = document.getElementById('lixiIcon');
+            lixiIcon.classList.add('shaking');
+
+            setTimeout(() => {
+                lixiIcon.classList.remove('shaking');
+                showResult(playerName);
+            }, 2000);
+        }
+
+        function showResult(playerName) {
+            const prizeObj = loadPrizes();
+            prizesList = getPrizeArray(prizeObj);
+
+            if (prizesList.length === 0) {
+                alert('Chưa có mệnh giá nào! Vui lòng vào admin để thêm mệnh giá.');
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * prizesList.length);
+            const selectedAmount = prizesList[randomIndex];
+            const selectedPrize = selectedAmount.toLocaleString() + ' VNĐ';
+
+            const history = JSON.parse(localStorage.getItem('lixiHistory') || '[]');
+            const now = new Date();
+            const timeString =
+                now.getHours().toString().padStart(2, '0') + ':' +
+                now.getMinutes().toString().padStart(2, '0') + ':' +
+                now.getSeconds().toString().padStart(2, '0');
+
+            const entry = {
+                time: timeString,
+                amount: selectedPrize,
+                playerName: playerName
+            };
+
+            history.push(entry);
+            localStorage.setItem('lixiHistory', JSON.stringify(history));
+
+            try { socket.emit('shake', entry); } catch (e) {}
+
+            sendToGoogleSheet(entry);
+            sendToTelegram(entry);
+
+            document.getElementById('prizeAmount').textContent = selectedPrize;
+            document.getElementById('resultModal').style.display = 'flex';
+
+            createFlowers();
+        }
+
+        function sendToGoogleSheet(data) {
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycbzNqTSqPRbTHj6MgqmKqC2mGCk5od3peq5HzehpJGAg2Xvfq8GF1ASQ1CRcdu-xbJlv/exec';
+
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(async response => {
+                const text = await response.text();
+                console.log('✓ Phản hồi từ server:', text);
+            })
+            .catch(error => {
+                console.error('⚠️ Lỗi khi gửi dữ liệu:', error);
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+
+        function createFlowers() {
+            const container = document.getElementById('flower-container');
+            for (let i = 0; i < 20; i++) {
+                const flower = document.createElement('div');
+                flower.className = 'flower';
+                flower.textContent = '🌸';
+                flower.style.left = Math.random() * 100 + '%';
+                flower.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                container.appendChild(flower);
+                setTimeout(() => flower.remove(), 5000);
+            }
+        }
+
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('resultModal');
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
