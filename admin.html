@@ -186,24 +186,6 @@
     </div>
 
     <script>
-        function saveToFirebase() {
-    const rows = document.querySelectorAll("#rateTable tbody tr");
-    const data = [];
-
-    rows.forEach(row => {
-        const amount = parseInt(row.querySelector(".amount").innerText.replace(/\D/g, ""));
-        const rate = parseFloat(row.querySelector(".rate").innerText);
-        data.push({ amount, rate });
-    });
-
-    firebase.database().ref("rates").set(data)
-        .then(() => {
-            alert("Đã lưu thành công cho TẤT CẢ thiết bị!");
-        })
-        .catch(err => {
-            alert("Lỗi khi lưu: " + err);
-        });
-}
         const ADMIN_PASS = "tuan2006";
 
 function checkPassword() {
@@ -482,4 +464,5 @@ function checkPassword() {
     </script>
 </body>
 </html>
+
 
